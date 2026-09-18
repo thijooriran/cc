@@ -40,7 +40,7 @@ function Portfolio({ identity }: { identity: Identity }) {
   return (
     <div className="portfolio">
       <div className="portfolio-total">
-        <span className="muted">Total simulated value</span>
+        <span className="muted">Total value</span>
         <span className="portfolio-total-num mono">{usd(total)}</span>
       </div>
       <table className="ledger">
@@ -65,7 +65,7 @@ function Portfolio({ identity }: { identity: Identity }) {
           ))}
         </tbody>
       </table>
-      <p className="muted small">Balances are seeded per identity and move only through confirmed transfers and escrows. All values are simulated.</p>
+      <p className="muted small">Balances move only through confirmed transfers and escrows.</p>
     </div>
   )
 }

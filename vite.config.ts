@@ -21,10 +21,9 @@ export default defineConfig({
       registerType: 'prompt',
       injectRegister: false,
       manifest: {
-        name: 'CRIMECHAT — Simulated Network',
+        name: 'CRIMECHAT',
         short_name: 'CRIMECHAT',
-        description:
-          'Fictional underworld marketplace chat demo. Simulated network — no real funds.',
+        description: 'Address-to-address channels, contracts, and escrowed settlement.',
         theme_color: '#0a0b0d',
         background_color: '#0a0b0d',
         display: 'standalone',

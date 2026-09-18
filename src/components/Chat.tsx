@@ -512,7 +512,7 @@ function SendFlowModal({ me, other, threadId, onClose }: { me: string; other: st
               </dd>
               <dt>Memo</dt>
               <dd>{memo || '—'}</dd>
-              <dt>Gas (simulated)</dt>
+              <dt>Gas</dt>
               <dd className="mono">
                 {gasEth} ETH <span className="muted">≈ {usd(gasUsd)}</span>
               </dd>

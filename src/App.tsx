@@ -6,7 +6,7 @@ import { syncAll, syncTokens } from './lib/sync'
 import { flushOutbox, registerBackgroundSync } from './lib/outbox'
 import { startPresenceHeartbeat, startRealtime } from './lib/realtime'
 import { Header, type View } from './components/Header'
-import { BootModal, DemoScriptModal, ReloadPrompt } from './components/Modals'
+import { BootModal, FieldGuideModal, ReloadPrompt } from './components/Modals'
 import { ChatView } from './components/Chat'
 import { BoardView } from './components/Board'
 import { VaultView } from './components/Vault'
@@ -16,7 +16,7 @@ export default function App() {
   const [bootError, setBootError] = useState('')
   const [view, setView] = useState<View>('channels')
   const [activeThreadId, setActiveThreadId] = useState<number | null>(null)
-  const [showDemo, setShowDemo] = useState(false)
+  const [showGuide, setShowGuide] = useState(false)
   const [installEvt, setInstallEvt] = useState<{ prompt: () => Promise<void> } | null>(null)
   const [updateReady, setUpdateReady] = useState<(() => void) | null>(null)
 
@@ -67,7 +67,7 @@ export default function App() {
         <h2>The network refused you</h2>
         <p className="mono">{bootError}</p>
         <p className="muted">
-          If the backend is unreachable, remove the env vars to run in LOCAL-ONLY mode against seeded mock data.
+          The relay may be unreachable, or your cover has been burned. Check your connection and reload.
         </p>
       </div>
     )
@@ -101,7 +101,7 @@ export default function App() {
           setView(v)
           if (v !== 'channels') setActiveThreadId((cur) => cur)
         }}
-        onShowDemo={() => setShowDemo(true)}
+        onShowGuide={() => setShowGuide(true)}
         onInstall={
           installEvt
             ? () => {
@@ -120,7 +120,7 @@ export default function App() {
         {view === 'vault' && <VaultView identity={identity} />}
       </main>
       <BootModal onEnter={() => undefined} />
-      {showDemo && <DemoScriptModal onClose={() => setShowDemo(false)} />}
+      {showGuide && <FieldGuideModal onClose={() => setShowGuide(false)} />}
       {updateReady && <ReloadPrompt onReload={() => updateReady()} />}
     </div>
   )

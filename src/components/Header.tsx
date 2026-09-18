@@ -24,12 +24,12 @@ interface HeaderProps {
   identity: Identity
   view: View
   setView: (v: View) => void
-  onShowDemo: () => void
+  onShowGuide: () => void
   onInstall: (() => void) | null
   onSwitchIdentity: (id: Identity) => void
 }
 
-export function Header({ identity, view, setView, onShowDemo, onInstall, onSwitchIdentity }: HeaderProps) {
+export function Header({ identity, view, setView, onShowGuide, onInstall, onSwitchIdentity }: HeaderProps) {
   const profile = useLive(() => db.profiles.get(identity.address.toLowerCase()), [identity.address])
   const [switching, setSwitching] = useState(false)
 
@@ -39,9 +39,6 @@ export function Header({ identity, view, setView, onShowDemo, onInstall, onSwitc
         <div className="brand">
           <span className="brand-mark">◈</span>
           <h1>CRIMECHAT</h1>
-          <span className="demo-badge" title="This is a fictional UI/UX demo. No real chain, no real value.">
-            DEMO — SIMULATED NETWORK — NO REAL FUNDS
-          </span>
         </div>
         <nav className="tabs" aria-label="Main">
           {(['channels', 'board', 'vault'] as View[]).map((v) => (
@@ -61,8 +58,8 @@ export function Header({ identity, view, setView, onShowDemo, onInstall, onSwitc
               Install
             </button>
           )}
-          <button className="btn btn-ghost" onClick={onShowDemo}>
-            Demo script
+          <button className="btn btn-ghost" onClick={onShowGuide}>
+            Field guide
           </button>
         </div>
       </div>

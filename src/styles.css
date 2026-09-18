@@ -92,14 +92,6 @@ button { font: inherit; cursor: pointer; }
 .header-row-sub { min-height: 40px; border-top: 1px solid var(--line-soft); justify-content: space-between; }
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand-mark { color: var(--accent); font-size: 18px; }
-.demo-badge {
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  color: var(--accent);
-  border: 1px solid var(--accent-dim);
-  padding: 2px 8px;
-  white-space: nowrap;
-}
 .tabs { display: flex; gap: 2px; }
 .tab {
   background: transparent; border: none; border-bottom: 2px solid transparent;
@@ -323,10 +315,10 @@ select:focus, input:focus, textarea:focus { outline: none; border-color: var(--a
 .review-list dt { color: var(--text-faint); font-size: 12px; }
 .review-list dd { margin: 0; word-break: break-all; }
 
-.demo-script { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 12px; }
-.demo-script li { display: flex; flex-direction: column; gap: 2px; }
-.demo-script li strong { color: var(--accent); }
-.demo-script li span { color: var(--text-dim); font-size: 13px; }
+.field-guide { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 12px; }
+.field-guide li { display: flex; flex-direction: column; gap: 2px; }
+.field-guide li strong { color: var(--accent); }
+.field-guide li span { color: var(--text-dim); font-size: 13px; }
 
 /* ---- reload prompt ---- */
 .reload-prompt {
@@ -360,7 +352,6 @@ select:focus, input:focus, textarea:focus { outline: none; border-color: var(--a
   .chat-layout.has-active .thread-list { display: none; }
   .msg { max-width: 92%; }
   .header-row { gap: 10px; }
-  .demo-badge { display: none; }
   .chat-head { flex-wrap: wrap; row-gap: 6px; }
   .chat-head-actions { width: 100%; justify-content: flex-end; }
 }
