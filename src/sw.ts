@@ -46,7 +46,11 @@ self.addEventListener('sync', (event: Event) => {
 })
 
 self.addEventListener('message', (event: ExtendableMessageEvent) => {
-  if ((event.data as { type?: string })?.type === 'crimechat-skip-waiting') {
+  // workbox-window's registerSW(...)(true) posts SKIP_WAITING to the waiting
+  // worker; accept our legacy tag too. Without this, the in-app Reload
+  // prompt never activates the new service worker.
+  const type = (event.data as { type?: string })?.type
+  if (type === 'SKIP_WAITING' || type === 'crimechat-skip-waiting') {
     self.skipWaiting()
   }
 })
