@@ -113,11 +113,34 @@ async function handleTransferRow(row: Record<string, unknown>): Promise<void> {
   // If we have a pending local card for this client_id, mark it sent.
   const clientId = row.client_id as string | null
   if (clientId) {
-    await db.messages.where('client_id').equals(clientId).modify({
-      status: 'sent',
-      payload: { transfer_id: row.id, tx_hash: row.tx_hash, block_number: row.block_number, status: 'confirmed' },
-    })
-    notify()
+    const local = await db.messages.where('client_id').equals(clientId).first()
+    if (local) {
+      // Merge — never overwrite the payload, the card renders token/amount from it.
+      await db.messages.where('client_id').equals(clientId).modify((m) => {
+        m.status = 'sent'
+        m.payload = {
+          ...m.payload,
+          transfer_id: row.id,
+          tx_hash: row.tx_hash,
+          block_number: row.block_number,
+          status: 'confirmed',
+        }
+      })
+      // The RPC also posts a system twin into the thread. If that echo landed
+      // first, drop it — the optimistic card is the one that flips state.
+      const twin = await db.messages
+        .where('thread_id')
+        .equals(local.thread_id)
+        .filter(
+          (m) =>
+            m.client_id == null &&
+            m.kind === 'transfer' &&
+            (m.payload as Record<string, unknown> | undefined)?.transfer_id === row.id,
+        )
+        .first()
+      if (twin) await db.messages.delete(twin.id)
+      notify()
+    }
   }
 }
 
@@ -130,6 +153,23 @@ export async function subscribeThread(threadId: number): Promise<void> {
   ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'crimechat_messages', filter: `thread_id=eq.${threadId}` },
     async (payload) => {
       const row = payload.new as Record<string, unknown>
+      const pl = (row.payload ?? {}) as Record<string, unknown>
+      // Server echo of one of OUR transfers: the outbox card already exists
+      // and flips to confirmed via the transfers-table handler — don't render
+      // a duplicate.
+      if (row.kind === 'transfer' && pl.transfer_id != null) {
+        const local = await db.messages
+          .where('thread_id')
+          .equals(threadId)
+          .filter(
+            (m) =>
+              m.client_id != null &&
+              m.kind === 'transfer' &&
+              (m.payload as Record<string, unknown> | undefined)?.transfer_id === pl.transfer_id,
+          )
+          .count()
+        if (local > 0) return
+      }
       await db.messages.put({ ...row, status: 'sent' } as never)
       await db.threads.where('id').equals(threadId).modify({ last_message_at: row.created_at as string })
       notify()
