@@ -61,6 +61,13 @@ export async function syncContacts(userId: string): Promise<void> {
 }
 
 export async function syncThreads(me: string): Promise<number[]> {
+  me = me.toLowerCase()
+  const norm = (rows: unknown) =>
+    (rows as { participant_a: string; participant_b: string }[]).map((t) => ({
+      ...t,
+      participant_a: t.participant_a.toLowerCase(),
+      participant_b: t.participant_b.toLowerCase(),
+    }))
   if (!ONLINE || !supabase) {
     const mine = await db.threads.toArray()
     return mine.map((t) => t.id)
@@ -74,7 +81,7 @@ export async function syncThreads(me: string): Promise<number[]> {
     .order('last_message_at', { ascending: true })
   let newest = data && data.length ? iso((data[data.length - 1] as Record<string, unknown>).last_message_at) : null
   if (newest) {
-    await db.threads.bulkPut(data as never[])
+    await db.threads.bulkPut(norm(data) as never[])
     notify()
   }
   // Also pick up threads with no messages yet (created but silent)
@@ -85,7 +92,7 @@ export async function syncThreads(me: string): Promise<number[]> {
     .order('created_at', { ascending: false })
     .limit(50)
   if (fresh) {
-    await db.threads.bulkPut(fresh as never[])
+    await db.threads.bulkPut(norm(fresh) as never[])
     notify()
   }
   if (!newest) newest = await lastSync('threads')

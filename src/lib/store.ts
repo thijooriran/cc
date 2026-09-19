@@ -82,7 +82,13 @@ export async function upsertThread(row: {
   last_message_at: string
   created_at: string
 }): Promise<void> {
-  await db.threads.put(row)
+  // Normalize to lowercase: addresses are EIP-55 checksummed at generation,
+  // and every reader compares participants against a lowercased `me`.
+  await db.threads.put({
+    ...row,
+    participant_a: row.participant_a.toLowerCase(),
+    participant_b: row.participant_b.toLowerCase(),
+  })
   notify()
 }
 
