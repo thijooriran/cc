@@ -48,8 +48,10 @@ if (typeof window !== 'undefined') {
 
   // Active probe: navigator.onLine alone is not trustworthy (browsers infer it
   // from recent network failures, and a cache-served cold launch may never
-  // fail a request). A tiny no-store fetch against an uncached resource gives
+  // fail a request). A no-store fetch against this dedicated probe file gives
   // a definitive answer, and drives the OFFLINE banner + outbox flush.
+  // The file is deliberately NOT in the SW precache glob, and the cache-busting
+  // query keeps it out of any runtime cache — a 200 always comes from the wire.
   async function probe(): Promise<void> {
     if (!navigator.onLine) {
       browserOnline = false
@@ -58,14 +60,11 @@ if (typeof window !== 'undefined') {
     }
     const was = getNetState()
     try {
-      // A bogus uncached path: any HTTP answer (even 404) means the network
-      // is reachable; only a transport failure means we are offline. (A real
-      // resource cannot be used — the SW may answer it from the precache.)
-      const r = await fetch(`/crimechat-probe-${Date.now()}.txt`, {
+      const r = await fetch(`${import.meta.env.BASE_URL}crimechat-probe.txt?ts=${Date.now()}`, {
         cache: 'no-store',
         signal: AbortSignal.timeout(3000),
       })
-      browserOnline = r.ok || r.status === 404
+      browserOnline = r.ok
     } catch {
       browserOnline = false
     }

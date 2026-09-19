@@ -12,11 +12,14 @@ precacheAndRoute(self.__WB_MANIFEST)
 const PAGE_CACHE = 'crimechat-pages-v1'
 
 async function navigationHandler({ request }: { request: Request }): Promise<Response> {
+  // SW scope is the deployed base path (e.g. /cc/) — the precached shell lives
+  // under it, so resolve index.html relative to the scope, not the origin root.
+  const shellUrl = self.registration.scope + 'index.html'
   const cache = await caches.open(PAGE_CACHE)
-  const cached = await cache.match('/index.html')
+  const cached = await cache.match(shellUrl)
   try {
     const fresh = await fetch(request)
-    if (fresh.ok) await cache.put('/index.html', fresh.clone())
+    if (fresh.ok) await cache.put(shellUrl, fresh.clone())
     return cached ?? fresh
   } catch {
     return cached ?? Response.error()

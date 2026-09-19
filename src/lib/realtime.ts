@@ -173,6 +173,9 @@ export async function subscribeThread(threadId: number): Promise<void> {
       scheduleRestart()
     } else if (status === 'SUBSCRIBED') {
       reportRealtimeStatus(true)
+      // Announce ourselves immediately; the heartbeat below only refreshes
+      // while the channel stays joined.
+      void ch.track({ address: me, at: Date.now() }).catch(() => undefined)
     }
   })
 }
@@ -206,13 +209,18 @@ async function restart(): Promise<void> {
 }
 
 // Presence heartbeat: announce ourselves in each subscribed thread channel.
+// track() pushes over the socket and REJECTS if the channel has not finished
+// joining — so only track joined channels and swallow transient rejections.
 export function startPresenceHeartbeat(identity: { address: string }): () => void {
   const client = supabase
   if (!ONLINE || !client) return () => undefined
+  const joined = (ch: unknown): boolean =>
+    (ch as { state?: string }).state === 'joined'
   const timer = setInterval(() => {
     for (const threadId of subscribedThreads) {
       const ch = client.channel(`crimechat:thread:${threadId}`)
-      void ch.track({ address: identity.address, at: Date.now() })
+      if (!joined(ch)) continue
+      void ch.track({ address: identity.address, at: Date.now() }).catch(() => undefined)
     }
   }, 5000)
   return () => clearInterval(timer)
