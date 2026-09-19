@@ -70,10 +70,14 @@ async function subscribeGlobal(): Promise<void> {
   const me = identityRef.address
   const ch = supabase.channel('crimechat:me:' + me.toLowerCase(), { config: { presence: { key: me } } })
 
-  ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'crimechat_threads', filter: `participant_a=eq.${me}` },
-    (payload) => void handleThreadRow(payload.new as Record<string, unknown>, true))
-  ch.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'crimechat_threads', filter: `participant_a=eq.${me}` },
-    (payload) => void handleThreadRow(payload.new as Record<string, unknown>, false))
+  // Participant order is address-sorted (normalize trigger), so we can be on
+  // either side — bind both columns. (Realtime filters are per-binding.)
+  for (const col of ['participant_a', 'participant_b']) {
+    ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'crimechat_threads', filter: `${col}=eq.${me}` },
+      (payload) => void handleThreadRow(payload.new as Record<string, unknown>, true))
+    ch.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'crimechat_threads', filter: `${col}=eq.${me}` },
+      (payload) => void handleThreadRow(payload.new as Record<string, unknown>, false))
+  }
 
   for (const col of ['from_address', 'to_address']) {
     ch.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'crimechat_transfers', filter: `${col}=eq.${me}` },

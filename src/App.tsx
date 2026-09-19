@@ -3,6 +3,7 @@ import { ONLINE } from './lib/config'
 import { bootIdentity, type Identity } from './lib/auth'
 import { seedMockData } from './lib/mock'
 import { syncAll, syncTokens } from './lib/sync'
+import { cleanupTransferCards } from './lib/store'
 import { flushOutbox, registerBackgroundSync } from './lib/outbox'
 import { startPresenceHeartbeat, startRealtime } from './lib/realtime'
 import { Header, type View } from './components/Header'
@@ -34,6 +35,7 @@ export default function App() {
         await startRealtime(id)
         startPresenceHeartbeat(id)
         await flushOutbox()
+        await cleanupTransferCards()
         await registerBackgroundSync()
       } catch (e) {
         if (alive) setBootError(e instanceof Error ? e.message : 'boot failed')

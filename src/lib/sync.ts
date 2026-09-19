@@ -73,10 +73,13 @@ export async function syncThreads(me: string): Promise<number[]> {
     return mine.map((t) => t.id)
   }
   const since = await lastSync('threads')
+  // Threads normalize participants by address sort order, so either side can
+  // be participant_a or participant_b — match both.
+  const mine = `participant_a.eq.${me},participant_b.eq.${me}`
   const { data } = await supabase
     .from('crimechat_threads')
     .select('*')
-    .eq('participant_a', me)
+    .or(mine)
     .gt('last_message_at', since)
     .order('last_message_at', { ascending: true })
   let newest = data && data.length ? iso((data[data.length - 1] as Record<string, unknown>).last_message_at) : null
@@ -88,7 +91,7 @@ export async function syncThreads(me: string): Promise<number[]> {
   const { data: fresh } = await supabase
     .from('crimechat_threads')
     .select('*')
-    .eq('participant_a', me)
+    .or(mine)
     .order('created_at', { ascending: false })
     .limit(50)
   if (fresh) {

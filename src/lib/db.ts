@@ -143,6 +143,11 @@ class CrimeChatDB extends Dexie {
       outbox: 'client_id, status',
       meta: 'key',
     })
+    // v2: index transfers by client_id so the boot cleanup can match the
+    // optimistic card to its confirmed server row.
+    this.version(2).stores({
+      transfers: 'id, from_address, to_address, created_at, client_id',
+    })
   }
 }
 

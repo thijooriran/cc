@@ -126,3 +126,44 @@ export async function upsertBalance(row: BalanceRow): Promise<void> {
   await db.balances.put(row)
   notify()
 }
+
+// Repair transfer cards written by older builds: the confirm handler used to
+// OVERWRITE the optimistic payload (losing token/amount — the "??? " card) and
+// the server's system echo created a duplicate. Runs once per boot; matches
+// local cards to confirmed server rows by client_id and drops echoes.
+export async function cleanupTransferCards(): Promise<void> {
+  const locals = await db.messages
+    .filter((m) => m.client_id != null && m.kind === 'transfer')
+    .toArray()
+  let changed = false
+  for (const m of locals) {
+    const tr = await db.transfers.where('client_id').equals(m.client_id!).first()
+    if (!tr) continue
+    await db.messages.where('id').equals(m.id).modify((mm) => {
+      mm.status = 'sent'
+      mm.payload = {
+        ...mm.payload,
+        transfer_id: tr.id,
+        token: tr.token_symbol,
+        amount: tr.amount,
+        memo: tr.memo,
+        to: tr.to_address,
+        tx_hash: tr.tx_hash,
+        block_number: tr.block_number,
+        status: 'confirmed',
+      }
+    })
+    await db.messages
+      .where('thread_id')
+      .equals(m.thread_id)
+      .filter(
+        (x) =>
+          x.client_id == null &&
+          x.kind === 'transfer' &&
+          (x.payload as Record<string, unknown> | undefined)?.transfer_id === tr.id,
+      )
+      .delete()
+    changed = true
+  }
+  if (changed) notify()
+}

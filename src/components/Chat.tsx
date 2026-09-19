@@ -274,7 +274,10 @@ function TransferCard({ message, me }: { message: MessageRow; me: string }) {
   const mine = message.sender_address.toLowerCase() === me.toLowerCase()
   const token = p.token ?? '???'
   const amount = p.amount ?? 0
-  const out = mine || p.direction === 'out'
+  // The server echo's direction is from the SENDER's perspective — treat a
+  // card whose counterparty is us as incoming, regardless of the flag.
+  const incoming = !!p.counterparty && p.counterparty.toLowerCase() === me.toLowerCase()
+  const out = mine || (p.direction === 'out' && !incoming)
   return (
     <div className={'tx-card' + (p.status === 'pending' ? ' tx-pending' : '')}>
       <div className="tx-row">
