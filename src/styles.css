@@ -195,6 +195,7 @@ button { font: inherit; cursor: pointer; }
 /* ---- inline cards ---- */
 .tx-card, .escrow-card, .contract-context, .system-card {
   border: 1px solid var(--line); background: var(--bg-2); padding: 10px 12px; min-width: 260px;
+  overflow-wrap: anywhere;
 }
 .tx-pending { border-style: dashed; animation: pulse 1.6s ease-in-out infinite; }
 .tx-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -387,13 +388,28 @@ select:focus, input:focus, textarea:focus { outline: none; border-color: var(--a
   .identity-block .addr-chip { display: none; }
   .rep-track { width: 40px; }
 
-  /* Chat: one pane at a time; back button returns to the list. */
+  /* Chat: one pane at a time; back button returns to the list. The whole pane
+     scrolls — header and composer stay sticky and frosted, with messages
+     sliding underneath (backdrop-filter). body is locked so only panes scroll. */
+  html, body { overflow: hidden; }
   .chat-layout { grid-template-columns: 1fr; }
   .chat-back { display: inline-flex; }
   .thread-list { border-right: none; max-height: none; height: 100%; }
   .chat-layout.has-active { grid-template-rows: 1fr; }
   .chat-layout.has-active .thread-list { display: none; }
   .chat-layout:not(.has-active) .chat-empty { display: none; }
+  .chat-pane { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .chat-pane .message-list { overflow: visible; }
+  .chat-pane .chat-head {
+    position: sticky; top: 0; z-index: 5;
+    background: rgba(16, 18, 22, 0.72);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  }
+  .chat-pane .composer {
+    position: sticky; bottom: 0; z-index: 5;
+    background: rgba(16, 18, 22, 0.72);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  }
   .chat-head { padding: 8px 10px; flex-wrap: nowrap; }
   .chat-head .addr-chip { display: none; }
   .chat-head-actions { gap: 6px; }

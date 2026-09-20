@@ -176,7 +176,13 @@ function ChatPane({ identity, threadId, onBack }: { identity: Identity; threadId
 
   const listRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight })
+    // Desktop: the message list itself scrolls. Mobile: the whole pane does
+    // (header/composer are sticky) — scroll whichever is actually scrollable.
+    const el = listRef.current
+    if (!el) return
+    el.scrollTo({ top: el.scrollHeight })
+    const pane = el.closest('.chat-pane')
+    if (pane && pane.scrollHeight > pane.clientHeight) pane.scrollTo({ top: pane.scrollHeight })
   }, [messages?.length])
 
   if (!thread) return <div className="chat-empty muted">Channel not found.</div>
