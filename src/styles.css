@@ -106,6 +106,13 @@ button { font: inherit; cursor: pointer; }
 }
 .thread-item .unread-badge { margin-left: auto; flex-shrink: 0; }
 .header-actions { margin-left: auto; display: flex; gap: 8px; }
+.notify-bell { display: inline-flex; align-items: center; gap: 6px; }
+.notify-bell[aria-pressed="true"] { color: var(--accent); }
+.notify-bell-blocked { opacity: 0.45; }
+.notify-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
+}
 .identity-block { display: flex; align-items: center; gap: 10px; padding: 6px 0; flex-wrap: wrap; }
 .alias { font-weight: 600; letter-spacing: 0.03em; }
 

@@ -148,6 +148,11 @@ class CrimeChatDB extends Dexie {
     this.version(2).stores({
       transfers: 'id, from_address, to_address, created_at, client_id',
     })
+    // v3: composite participant index — startThread looks up an existing
+    // channel by the address pair (previously unindexed → SchemaError).
+    this.version(3).stores({
+      threads: 'id, participant_a, participant_b, last_message_at, [participant_a+participant_b]',
+    })
   }
 }
 

@@ -3,6 +3,7 @@ import { metaGet, metaSet, notify, upsertEscrow, upsertMessage } from './store'
 import { TOKENS } from './tokens'
 import { fakeTxHash } from './format'
 import { playMessageSound } from './sound'
+import { notifyIncomingMessage } from './notify'
 
 // ---------------------------------------------------------------------------
 // LOCAL-ONLY mode: seeded mock operatives, contracts, and scripted bot
@@ -191,6 +192,7 @@ export async function mockScheduleBotReply(threadId: number, senderAddress: stri
       await db.threads.where('id').equals(threadId).modify({ last_message_at: now })
       notify()
       playMessageSound()
+      notifyIncomingMessage({ threadId, sender: bot.address, alias: bot.alias, body: reply, kind: 'text' })
     })()
   }, delay)
 }

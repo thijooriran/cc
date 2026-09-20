@@ -7,6 +7,7 @@ import { cleanupTransferCards, useLive } from './lib/store'
 import { initReadMarkers, unreadByThread } from './lib/unread'
 import { flushOutbox, registerBackgroundSync } from './lib/outbox'
 import { startPresenceHeartbeat, startRealtime } from './lib/realtime'
+import { setActiveThreadProvider, setNotifyNavigator } from './lib/notify'
 import { Header, type View } from './components/Header'
 import { BootModal, FieldGuideModal, ReloadPrompt } from './components/Modals'
 import { ChatView } from './components/Chat'
@@ -78,6 +79,18 @@ export default function App() {
   useEffect(() => {
     document.title = unreadTotal ? `(${unreadTotal}) CRIMECHAT` : 'CRIMECHAT'
   }, [unreadTotal])
+
+  // OS-notification wiring: suppress pings for the thread on screen, and make
+  // clicking a notification land on that channel.
+  useEffect(() => {
+    setActiveThreadProvider(() => activeThreadId)
+  }, [activeThreadId])
+  useEffect(() => {
+    setNotifyNavigator((threadId) => {
+      setActiveThreadId(threadId)
+      setView('channels')
+    })
+  }, [])
 
   if (bootError) {
     return (

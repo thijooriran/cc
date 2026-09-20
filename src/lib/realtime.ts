@@ -12,6 +12,7 @@ import {
 } from './store'
 import { getNetState, reportRealtimeStatus } from './net'
 import { playMessageSound } from './sound'
+import { notifyIncomingMessage } from './notify'
 import {
   syncAll,
   syncContracts,
@@ -179,7 +180,17 @@ export async function subscribeThread(threadId: number): Promise<void> {
       await db.threads.where('id').equals(threadId).modify({ last_message_at: row.created_at as string })
       notify()
       const from = row.sender_address as string
-      if (from && from.toLowerCase() !== me.toLowerCase()) playMessageSound()
+      if (from && from.toLowerCase() !== me.toLowerCase()) {
+        playMessageSound()
+        const prof = await db.profiles.get(from.toLowerCase())
+        notifyIncomingMessage({
+          threadId,
+          sender: from,
+          alias: prof?.alias,
+          body: row.body as string,
+          kind: row.kind as 'text' | 'transfer' | 'escrow' | 'system',
+        })
+      }
     })
   ch.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'crimechat_escrows', filter: `thread_id=eq.${threadId}` },
     (payload) => void upsertEscrow(payload.new as never))

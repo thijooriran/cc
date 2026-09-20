@@ -404,10 +404,15 @@ function NewThreadModal({ me, onClose, onOpen }: { me: string; onClose: () => vo
   const open = async () => {
     setBusy(true)
     setErr('')
-    const { thread, error } = await startThread(me, addr)
-    setBusy(false)
-    if (error || !thread) setErr(error ?? 'failed to open channel')
-    else onOpen(thread.id)
+    try {
+      const { thread, error } = await startThread(me, addr)
+      if (error || !thread) setErr(error ?? 'failed to open channel')
+      else onOpen(thread.id)
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'failed to open channel')
+    } finally {
+      setBusy(false)
+    }
   }
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" onClick={onClose}>
