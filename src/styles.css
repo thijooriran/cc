@@ -359,13 +359,68 @@ select:focus, input:focus, textarea:focus { outline: none; border-color: var(--a
 }
 .boot-error .mono { color: var(--danger); }
 
-/* ---- responsive: single pane under 820px ---- */
+/* ---- responsive: mobile-first single pane under 820px ---- */
+/* Desktop keeps the two-pane layout; the back button is mobile-only. */
+.chat-back { display: none; }
+
 @media (max-width: 820px) {
+  /* iOS Safari zooms on focus when input text is under 16px — force 16px. */
+  select, input, textarea, .composer textarea { font-size: 16px; }
+
+  /* Dynamic viewport height: no gap/clipping as the browser chrome shows/hides. */
+  html, body, #root { height: 100dvh; }
+  .app { height: 100dvh; }
+
+  /* Compact header: glyph-only brand, full-width tabs, icon-only bell. */
+  .app-header { padding: 0 10px; }
+  .header-row { gap: 8px; min-height: 44px; }
+  .brand h1 { display: none; }
+  .tabs { flex: 1; }
+  .tab { flex: 1; text-align: center; padding: 11px 4px; font-size: 13px; }
+  .header-actions { margin-left: 0; }
+  .notify-label { display: none; }
+  .notify-bell { padding: 7px 10px; }
+
+  /* Second header row: alias + switch only, tight. */
+  .header-row-sub { min-height: 34px; }
+  .identity-block { gap: 8px; font-size: 13px; padding: 4px 0; }
+  .identity-block .addr-chip { display: none; }
+  .rep-track { width: 40px; }
+
+  /* Chat: one pane at a time; back button returns to the list. */
   .chat-layout { grid-template-columns: 1fr; }
-  .thread-list { display: block; border-right: none; border-bottom: 1px solid var(--line); max-height: 34vh; }
+  .chat-back { display: inline-flex; }
+  .thread-list { border-right: none; max-height: none; height: 100%; }
+  .chat-layout.has-active { grid-template-rows: 1fr; }
   .chat-layout.has-active .thread-list { display: none; }
+  .chat-layout:not(.has-active) .chat-empty { display: none; }
+  .chat-head { padding: 8px 10px; flex-wrap: nowrap; }
+  .chat-head .addr-chip { display: none; }
+  .chat-head-actions { gap: 6px; }
+  .chat-head-actions .btn { padding: 7px 10px; font-size: 13px; }
+  .message-list { padding: 12px; gap: 10px; }
   .msg { max-width: 92%; }
-  .header-row { gap: 10px; }
-  .chat-head { flex-wrap: wrap; row-gap: 6px; }
-  .chat-head-actions { width: 100%; justify-content: flex-end; }
+  .composer { padding: 10px 10px calc(10px + env(safe-area-inset-bottom)); gap: 8px; }
+  .composer .btn { padding: 7px 12px; }
+
+  /* Board: single column, filters stack. */
+  .board, .vault { padding: 12px; }
+  .board-head { flex-direction: column; align-items: stretch; gap: 10px; margin-bottom: 12px; }
+  .board-filters { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .board-filters select { width: 100%; }
+  .board-head .btn { width: 100%; }
+  .contract-grid { grid-template-columns: 1fr; gap: 10px; }
+
+  /* Vault ledger breathes less. */
+  .ledger th, .ledger td { padding: 7px 6px; font-size: 13px; }
+  .portfolio-total-num { font-size: 24px; }
+
+  /* Modals: roomier, full-width actions. */
+  .modal { padding: 18px 16px; }
+  .modal-actions { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .modal-actions .btn { width: 100%; }
+  .form-row { flex-direction: column; }
+
+  /* Reload prompt hugs the bottom above the home indicator. */
+  .reload-prompt { bottom: calc(10px + env(safe-area-inset-bottom)); width: calc(100% - 24px); justify-content: center; }
 }

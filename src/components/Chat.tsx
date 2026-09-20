@@ -67,7 +67,7 @@ export function ChatView({
         </ul>
       </aside>
       {activeThreadId != null ? (
-        <ChatPane key={activeThreadId} identity={identity} threadId={activeThreadId} />
+        <ChatPane key={activeThreadId} identity={identity} threadId={activeThreadId} onBack={() => setActiveThreadId(null)} />
       ) : (
         <div className="chat-empty">
           <div className="boot-glyph">◈</div>
@@ -151,7 +151,7 @@ function usePresenceSnapshot() {
 
 // ---------------------------------------------------------------------------
 
-function ChatPane({ identity, threadId }: { identity: Identity; threadId: number }) {
+function ChatPane({ identity, threadId, onBack }: { identity: Identity; threadId: number; onBack: () => void }) {
   const me = identity.address.toLowerCase()
   const thread = useLive(() => db.threads.get(threadId), [threadId])
   const other = thread ? (thread.participant_a === me ? thread.participant_b : thread.participant_a) : ''
@@ -187,6 +187,9 @@ function ChatPane({ identity, threadId }: { identity: Identity; threadId: number
   return (
     <section className="chat-pane" aria-label="Conversation">
       <div className="chat-head">
+        <button className="btn btn-ghost chat-back" onClick={onBack} aria-label="Back to channels">
+          ←
+        </button>
         <Identicon address={other} size={34} />
         <div className="chat-head-meta">
           <span className="alias">{profile?.alias ?? truncateAddress(other)}</span>
