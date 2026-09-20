@@ -6,6 +6,7 @@ import { enqueueMessage } from './outbox'
 import { isValidAddress } from './identity'
 import { getNetState } from './net'
 import { isBotAddress, mockEscrowTransition } from './mock'
+import { markThreadRead } from './unread'
 
 // ---------------------------------------------------------------------------
 // High-level actions used by the UI. Every action writes into Dexie; network
@@ -45,6 +46,7 @@ export async function startThread(
       created_at: new Date().toISOString(),
     }
     await upsertThread(thread)
+    await markThreadRead(thread.id)
     return { thread }
   }
 
@@ -61,6 +63,7 @@ export async function startThread(
   })
   if (error || !data) return { thread: null, error: error?.message ?? 'failed to open channel' }
   await upsertThread(data)
+  await markThreadRead(data.id)
   // Lazy subscription for the new thread (idempotent).
   const { subscribeThread } = await import('./realtime')
   await subscribeThread(data.id)

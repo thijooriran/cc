@@ -98,6 +98,13 @@ button { font: inherit; cursor: pointer; }
   color: var(--text-dim); padding: 8px 14px; letter-spacing: 0.05em;
 }
 .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+.unread-badge {
+  display: inline-block; min-width: 17px; text-align: center;
+  background: var(--accent); color: #0a0b0d;
+  font-size: 10px; font-weight: 700; line-height: 1;
+  border-radius: 9px; padding: 3px 5px; margin-left: 6px;
+}
+.thread-item .unread-badge { margin-left: auto; flex-shrink: 0; }
 .header-actions { margin-left: auto; display: flex; gap: 8px; }
 .identity-block { display: flex; align-items: center; gap: 10px; padding: 6px 0; flex-wrap: wrap; }
 .alias { font-weight: 600; letter-spacing: 0.03em; }

@@ -12,6 +12,7 @@ import {
 } from '../lib/actions'
 import { enqueueMessage, retryMessage } from '../lib/outbox'
 import { getPresence, onPresence, sendTyping } from '../lib/realtime'
+import { unreadByThread, markThreadRead } from '../lib/unread'
 import { truncateAddress } from '../lib/identity'
 import { formatAmount, relativeTime, tokenUsd, usd } from '../lib/format'
 import { TOKENS, TOKEN_MAP } from '../lib/tokens'
@@ -40,6 +41,7 @@ export function ChatView({
     },
     [me],
   )
+  const unread = useLive(() => unreadByThread(me), [me])
 
   return (
     <div className={activeThreadId != null ? 'chat-layout has-active' : 'chat-layout'}>
@@ -56,6 +58,7 @@ export function ChatView({
               key={t.id}
               thread={t}
               me={me}
+              unread={unread?.get(t.id) ?? 0}
               active={t.id === activeThreadId}
               onSelect={() => setActiveThreadId(t.id)}
             />
@@ -88,11 +91,13 @@ export function ChatView({
 function ThreadListItem({
   thread,
   me,
+  unread,
   active,
   onSelect,
 }: {
   thread: ThreadRow
   me: string
+  unread: number
   active: boolean
   onSelect: () => void
 }) {
@@ -132,6 +137,7 @@ function ThreadListItem({
           </span>
         </span>
         <span className="thread-time mono">{relativeTime(thread.last_message_at)}</span>
+        {unread > 0 && <span className="unread-badge" aria-label={unread + ' unread'}>{unread}</span>}
       </button>
     </li>
   )
@@ -156,6 +162,11 @@ function ChatPane({ identity, threadId }: { identity: Identity; threadId: number
   )
   const escrows = useLive(async () => (await db.escrows.where('thread_id').equals(threadId).toArray()).sort((a, b) => b.updated_at.localeCompare(a.updated_at)), [threadId])
   const presence = usePresenceSnapshot()
+
+  // Open thread = read thread, including messages that arrive while it stays open.
+  useEffect(() => {
+    void markThreadRead(threadId)
+  }, [threadId, messages])
   const [sendFlow, setSendFlow] = useState(false)
   const [escrowFlow, setEscrowFlow] = useState(false)
   const offline = getNetState() === 'OFFLINE'

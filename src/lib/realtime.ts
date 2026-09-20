@@ -11,6 +11,7 @@ import {
   upsertTransfer,
 } from './store'
 import { getNetState, reportRealtimeStatus } from './net'
+import { playMessageSound } from './sound'
 import {
   syncAll,
   syncContracts,
@@ -177,6 +178,8 @@ export async function subscribeThread(threadId: number): Promise<void> {
       await db.messages.put({ ...row, status: 'sent' } as never)
       await db.threads.where('id').equals(threadId).modify({ last_message_at: row.created_at as string })
       notify()
+      const from = row.sender_address as string
+      if (from && from.toLowerCase() !== me.toLowerCase()) playMessageSound()
     })
   ch.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'crimechat_escrows', filter: `thread_id=eq.${threadId}` },
     (payload) => void upsertEscrow(payload.new as never))

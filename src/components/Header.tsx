@@ -24,12 +24,13 @@ interface HeaderProps {
   identity: Identity
   view: View
   setView: (v: View) => void
+  unreadTotal: number
   onShowGuide: () => void
   onInstall: (() => void) | null
   onSwitchIdentity: (id: Identity) => void
 }
 
-export function Header({ identity, view, setView, onShowGuide, onInstall, onSwitchIdentity }: HeaderProps) {
+export function Header({ identity, view, setView, unreadTotal, onShowGuide, onInstall, onSwitchIdentity }: HeaderProps) {
   const profile = useLive(() => db.profiles.get(identity.address.toLowerCase()), [identity.address])
   const [switching, setSwitching] = useState(false)
 
@@ -49,6 +50,9 @@ export function Header({ identity, view, setView, onShowGuide, onInstall, onSwit
               aria-pressed={view === v}
             >
               {v === 'channels' ? 'Channels' : v === 'board' ? 'Board' : 'Vault'}
+              {v === 'channels' && unreadTotal > 0 && (
+                <span className="unread-badge" aria-label={unreadTotal + ' unread messages'}>{unreadTotal}</span>
+              )}
             </button>
           ))}
         </nav>

@@ -3,7 +3,8 @@ import { ONLINE } from './lib/config'
 import { bootIdentity, type Identity } from './lib/auth'
 import { seedMockData } from './lib/mock'
 import { syncAll, syncTokens } from './lib/sync'
-import { cleanupTransferCards } from './lib/store'
+import { cleanupTransferCards, useLive } from './lib/store'
+import { initReadMarkers, unreadByThread } from './lib/unread'
 import { flushOutbox, registerBackgroundSync } from './lib/outbox'
 import { startPresenceHeartbeat, startRealtime } from './lib/realtime'
 import { Header, type View } from './components/Header'
@@ -32,6 +33,7 @@ export default function App() {
         if (!ONLINE) await seedMockData(id)
         await syncTokens()
         await syncAll(id)
+        await initReadMarkers()
         await startRealtime(id)
         startPresenceHeartbeat(id)
         await flushOutbox()
@@ -62,6 +64,20 @@ export default function App() {
     window.addEventListener('crimechat:sw-update', onSw)
     return () => window.removeEventListener('crimechat:sw-update', onSw)
   }, [])
+
+  // Unread badge: total across threads, mirrored into the tab title so a
+  // backgrounded tab still shows there is traffic.
+  const unreadTotal = useLive(async () => {
+    if (!identity) return 0
+    const byThread = await unreadByThread(identity.address.toLowerCase())
+    let n = 0
+    byThread.forEach((v) => { n += v })
+    return n
+  }, [identity?.address])
+
+  useEffect(() => {
+    document.title = unreadTotal ? `(${unreadTotal}) CRIMECHAT` : 'CRIMECHAT'
+  }, [unreadTotal])
 
   if (bootError) {
     return (
@@ -103,6 +119,7 @@ export default function App() {
           setView(v)
           if (v !== 'channels') setActiveThreadId((cur) => cur)
         }}
+        unreadTotal={unreadTotal ?? 0}
         onShowGuide={() => setShowGuide(true)}
         onInstall={
           installEvt
