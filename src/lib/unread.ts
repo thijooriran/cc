@@ -27,8 +27,10 @@ export async function unreadByThread(me: string): Promise<Map<number, number>> {
   const messages = await db.messages.toArray()
   for (const m of messages) {
     if (m.sender_address.toLowerCase() === me) continue
+    // No marker means the thread arrived after the boot baseline (or the
+    // user never opened it) — its traffic is genuinely unread.
     const marker = read.get(m.thread_id)
-    if (!marker || m.created_at <= marker) continue
+    if (marker && m.created_at <= marker) continue
     counts.set(m.thread_id, (counts.get(m.thread_id) ?? 0) + 1)
   }
   return counts
