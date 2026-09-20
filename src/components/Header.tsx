@@ -6,26 +6,31 @@ import { db } from '../lib/db'
 import { getNetState, onNetState, type NetState } from '../lib/net'
 import { switchIdentity } from '../lib/auth'
 import { getNotifyState, requestNotifyPermission, type NotifyState } from '../lib/notify'
+import { ensurePushSubscription } from '../lib/push'
 
 export type View = 'channels' | 'board' | 'vault'
 
-function NotifyBell() {
+function NotifyBell({ identity }: { identity: Identity }) {
   const [state, setState] = useState<NotifyState>(() => getNotifyState())
   if (state === 'unsupported') return null
   const enabled = state === 'granted'
   const title =
     state === 'granted'
-      ? 'Message alerts on — system notifications while the app is in the background'
+      ? 'Message alerts on — system notifications even when the app is closed'
       : state === 'denied'
         ? 'Alerts blocked — allow notifications for this site in your browser settings'
-        : 'Enable message alerts — system notifications while the app is in the background'
+        : 'Enable message alerts — system notifications even when the app is closed'
   return (
     <button
       className={`btn btn-ghost notify-bell${state === 'denied' ? ' notify-bell-blocked' : ''}`}
       title={title}
       aria-pressed={enabled}
       onClick={() => {
-        if (state === 'prompt') void requestNotifyPermission().then(setState)
+        if (state !== 'prompt') return
+        void requestNotifyPermission().then(async (s) => {
+          setState(s)
+          if (s === 'granted') await ensurePushSubscription(identity)
+        })
       }}
     >
       <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="currentColor">
@@ -86,7 +91,7 @@ export function Header({ identity, view, setView, unreadTotal, onShowGuide, onIn
           ))}
         </nav>
         <div className="header-actions">
-          <NotifyBell />
+          <NotifyBell identity={identity} />
           {onInstall && (
             <button className="btn btn-ghost" onClick={onInstall}>
               Install

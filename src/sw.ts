@@ -54,3 +54,54 @@ self.addEventListener('message', (event: ExtendableMessageEvent) => {
     self.skipWaiting()
   }
 })
+
+// ---------------------------------------------------------------------------
+// Web Push: the crimechat-push edge function wakes this worker even when the
+// app is fully closed. Every push must show a notification (userVisibleOnly).
+// ---------------------------------------------------------------------------
+
+interface PushPayload {
+  title?: string
+  body?: string
+  threadId?: number
+  kind?: string
+}
+
+self.addEventListener('push', (event: Event) => {
+  const e = event as PushEvent
+  let data: PushPayload = {}
+  try {
+    data = e.data ? (e.data.json() as PushPayload) : {}
+  } catch {
+    data = {}
+  }
+  const title = data.title || 'CRIMECHAT'
+  const body = data.body || 'New traffic on the wire.'
+  e.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      tag: data.threadId != null ? `crimechat:thread:${data.threadId}` : 'crimechat',
+      data: { threadId: data.threadId ?? null },
+      icon: self.registration.scope + 'icons/icon-192.png',
+      badge: self.registration.scope + 'icons/icon-192.png',
+    }),
+  )
+})
+
+self.addEventListener('notificationclick', (event: Event) => {
+  const e = event as NotificationEvent
+  e.notification.close()
+  const threadId = (e.notification.data as { threadId?: number } | undefined)?.threadId
+  const target = self.registration.scope + (threadId != null ? '?thread=' + threadId : '')
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      const existing = clients.find((c) => c.url.startsWith(self.registration.scope))
+      if (existing) {
+        existing.navigate(target)
+        existing.focus()
+      } else {
+        void self.clients.openWindow(target)
+      }
+    }),
+  )
+})

@@ -8,6 +8,7 @@ import { initReadMarkers, unreadByThread } from './lib/unread'
 import { flushOutbox, registerBackgroundSync } from './lib/outbox'
 import { startPresenceHeartbeat, startRealtime } from './lib/realtime'
 import { setActiveThreadProvider, setNotifyNavigator } from './lib/notify'
+import { ensurePushSubscription } from './lib/push'
 import { Header, type View } from './components/Header'
 import { BootModal, FieldGuideModal, ReloadPrompt } from './components/Modals'
 import { ChatView } from './components/Chat'
@@ -40,6 +41,16 @@ export default function App() {
         await flushOutbox()
         await cleanupTransferCards()
         await registerBackgroundSync()
+        // Granted-notice users get Web Push silently in the background.
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          void ensurePushSubscription(id)
+        }
+        // Deep link from a clicked push notification (?thread=<id>).
+        const deepThread = Number(new URLSearchParams(window.location.search).get('thread'))
+        if (Number.isFinite(deepThread) && deepThread > 0) {
+          setActiveThreadId(deepThread)
+          setView('channels')
+        }
       } catch (e) {
         if (alive) setBootError(e instanceof Error ? e.message : 'boot failed')
       }
@@ -120,6 +131,9 @@ export default function App() {
       if (!ONLINE) await seedMockData(id)
       await syncAll(id)
       await startRealtime(id)
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        void ensurePushSubscription(id)
+      }
     })()
   }
 
